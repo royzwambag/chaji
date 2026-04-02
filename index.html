@@ -279,6 +279,12 @@
       <option value="2">★★ Not for me</option>
       <option value="1">★ Disliked</option>
     </select>
+    <select id="filterBuyAgain" onchange="render()">
+      <option value="">All buy again</option>
+      <option value="yes">✓ Buy again</option>
+      <option value="maybe">~ Maybe</option>
+      <option value="no">✗ Won't rebuy</option>
+    </select>
     <select id="sortBy" onchange="render()">
       <option value="date-desc">Newest first</option>
       <option value="date-asc">Oldest first</option>
@@ -503,12 +509,14 @@
     const q = document.getElementById('searchInput').value.toLowerCase();
     const typeF = document.getElementById('filterType').value;
     const ratingF = document.getElementById('filterRating').value;
+    const buyAgainF = document.getElementById('filterBuyAgain').value;
     const sort = document.getElementById('sortBy').value;
 
     let filtered = teas.filter(t => {
       if (q && !((t.name||'').toLowerCase().includes(q) || (t.origin||'').toLowerCase().includes(q) || (t.notes||'').toLowerCase().includes(q) || (t.vendor||'').toLowerCase().includes(q))) return false;
       if (typeF && t.type !== typeF) return false;
       if (ratingF && t.rating !== parseInt(ratingF)) return false;
+      if (buyAgainF && t.buyAgain !== buyAgainF) return false;
       return true;
     });
 
@@ -526,7 +534,8 @@
   function renderStats() {
     const total = teas.length;
     const types = new Set(teas.map(t => t.type)).size;
-    const avg = total ? (teas.reduce((s, t) => s + (t.rating||0), 0) / total).toFixed(1) : '—';
+    const rated = teas.filter(t => t.rating);
+    const avg = rated.length ? (rated.reduce((s, t) => s + t.rating, 0) / rated.length).toFixed(1) : '—';
     document.getElementById('stats').innerHTML = `
       <div class="stat-card"><div class="num">${total}</div><div class="label">Teas tried</div></div>
       <div class="stat-card"><div class="num">${types}</div><div class="label">Types explored</div></div>
