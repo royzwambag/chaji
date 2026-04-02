@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cha Ji — Tea Journal</title>
+  <style>
+    :root {
+      --bg: #faf7f2;
+      --surface: #ffffff;
+      --border: #e8e0d5;
+      --text: #2c2416;
+      --muted: #8a7560;
+      --accent: #7a5c3a;
+      --accent-light: #f0e8dc;
+      --green: #4a7c59;
+      --red: #a63d2f;
+      --yellow: #c49a2b;
+      --radius: 12px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--accent);
+      color: #fff;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    header h1 { font-size: 1.4rem; font-weight: 700; letter-spacing: 0.5px; }
+    header p { font-size: 0.8rem; opacity: 0.75; margin-top: 2px; }
+
+    .header-right { display: flex; gap: 10px; align-items: center; }
+
+    .btn {
+      padding: 8px 16px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .btn-primary { background: #fff; color: var(--accent); }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-danger { background: #fee2e2; color: var(--red); }
+    .btn-sm { padding: 5px 10px; font-size: 0.78rem; }
+
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
+
+    /* Stats bar */
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      text-align: center;
+    }
+    .stat-card .num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
+    .stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 20px;
+      align-items: center;
+    }
+    .controls input, .controls select {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface);
+      font-size: 0.875rem;
+      color: var(--text);
+      outline: none;
+    }
+    .controls input:focus, .controls select:focus { border-color: var(--accent); }
+    .controls input[type=search] { flex: 1; min-width: 180px; }
+
+    /* Tea grid */
+    .tea-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+
+    .tea-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      transition: box-shadow 0.15s;
+    }
+    .tea-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+    .card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .tea-name { font-size: 1rem; font-weight: 700; }
+    .tea-type-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 99px;
+      white-space: nowrap;
+    }
+
+    .stars { font-size: 1.1rem; letter-spacing: 1px; }
+    .star-filled { color: var(--yellow); }
+    .star-empty { color: #d1c9bf; }
+
+    .tea-meta {
+      font-size: 0.78rem;
+      color: var(--muted);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 14px;
+    }
+    .tea-meta span { display: flex; align-items: center; gap: 4px; }
+
+    .brew-params {
+      background: var(--accent-light);
+      border-radius: 8px;
+      padding: 8px 12px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+    .brew-param { text-align: center; }
+    .brew-param .val { font-weight: 700; color: var(--accent); font-size: 0.85rem; }
+    .brew-param .key { color: var(--muted); }
+
+    .tea-notes {
+      font-size: 0.82rem;
+      color: #4a3f32;
+      line-height: 1.5;
+      border-left: 3px solid var(--border);
+      padding-left: 10px;
+    }
+
+    .card-actions { display: flex; gap: 6px; margin-top: 4px; }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+      grid-column: 1/-1;
+    }
+    .empty-state .icon { font-size: 3rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 100;
+      backdrop-filter: blur(2px);
+    }
+    .modal-backdrop.hidden { display: none; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 28px;
+      width: 100%;
+      max-width: 540px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h2 { font-size: 1.2rem; margin-bottom: 20px; color: var(--accent); }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group.full { grid-column: 1/-1; }
+
+    label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+
+    input, select, textarea {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.875rem;
+      color: var(--text);
+      background: var(--bg);
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 80px; }
+
+    .star-picker { display: flex; gap: 6px; font-size: 1.6rem; cursor: pointer; }
+    .star-picker span { transition: transform 0.1s; }
+    .star-picker span:hover { transform: scale(1.2); }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+    /* Type colors */
+    .type-green { background: #dcf0e3; color: #2d6b3e; }
+    .type-white { background: #f0ece8; color: #6b5a4a; }
+    .type-yellow { background: #fef9c3; color: #7a6010; }
+    .type-oolong { background: #fce7c8; color: #7a4510; }
+    .type-black { background: #e5d5c5; color: #4a2a10; }
+    .type-puerh { background: #e0d4f0; color: #4a2a70; }
+    .type-other { background: #e8eaf0; color: #3a4070; }
+
+    @media (max-width: 480px) {
+      .form-grid { grid-template-columns: 1fr; }
+      .brew-params { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>茶记 &nbsp;Cha Ji</h1>
+    <p>Gong Fu Cha Journal</p>
+  </div>
+  <div class="header-right">
+    <button class="btn btn-primary" onclick="openModal()">+ Add Tea</button>
+  </div>
+</header>
+
+<main>
+  <div class="stats" id="stats"></div>
+
+  <div class="controls">
+    <input type="search" id="searchInput" placeholder="Search teas..." oninput="render()" />
+    <select id="filterType" onchange="render()">
+      <option value="">All types</option>
+      <option value="green">Green</option>
+      <option value="white">White</option>
+      <option value="yellow">Yellow</option>
+      <option value="oolong">Oolong</option>
+      <option value="black">Black (Hong Cha)</option>
+      <option value="puerh">Pu-erh</option>
+      <option value="other">Other</option>
+    </select>
+    <select id="filterRating" onchange="render()">
+      <option value="">All ratings</option>
+      <option value="5">★★★★★ Loved</option>
+      <option value="4">★★★★ Really good</option>
+      <option value="3">★★★ Decent</option>
+      <option value="2">★★ Not for me</option>
+      <option value="1">★ Disliked</option>
+    </select>
+    <select id="sortBy" onchange="render()">
+      <option value="date-desc">Newest first</option>
+      <option value="date-asc">Oldest first</option>
+      <option value="rating-desc">Highest rated</option>
+      <option value="name-asc">Name A–Z</option>
+    </select>
+  </div>
+
+  <div class="tea-grid" id="teaGrid"></div>
+</main>
+
+<!-- Modal -->
+<div class="modal-backdrop hidden" id="modalBackdrop" onclick="backdropClick(event)">
+  <div class="modal">
+    <h2 id="modalTitle">New Tea Entry</h2>
+    <div class="form-grid">
+      <div class="form-group full">
+        <label>Tea Name *</label>
+        <input id="fName" type="text" placeholder="e.g. Tieguanyin, Da Hong Pao..." />
+      </div>
+      <div class="form-group">
+        <label>Type</label>
+        <select id="fType">
+          <option value="green">Green (Lü Cha)</option>
+          <option value="white">White (Bái Chá)</option>
+          <option value="yellow">Yellow (Huáng Chá)</option>
+          <option value="oolong" selected>Oolong (Wūlóng)</option>
+          <option value="black">Black (Hóng Chá)</option>
+          <option value="puerh">Pu-erh (Pǔ'ěr)</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Origin / Region</label>
+        <input id="fOrigin" type="text" placeholder="e.g. Fujian, Yunnan..." />
+      </div>
+      <div class="form-group">
+        <label>Vendor / Source</label>
+        <input id="fVendor" type="text" placeholder="e.g. Bitterleaf, YS..." />
+      </div>
+      <div class="form-group">
+        <label>Year / Season</label>
+        <input id="fSeason" type="text" placeholder="e.g. 2024, Spring 2023..." />
+      </div>
+      <div class="form-group full">
+        <label>Your Rating</label>
+        <div class="star-picker" id="starPicker">
+          <span onclick="setRating(1)">☆</span>
+          <span onclick="setRating(2)">☆</span>
+          <span onclick="setRating(3)">☆</span>
+          <span onclick="setRating(4)">☆</span>
+          <span onclick="setRating(5)">☆</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Water Temp (°C)</label>
+        <input id="fTemp" type="number" placeholder="e.g. 90" min="50" max="100" />
+      </div>
+      <div class="form-group">
+        <label>Tea amount (g)</label>
+        <input id="fGrams" type="number" placeholder="e.g. 5" step="0.5" />
+      </div>
+      <div class="form-group">
+        <label>Water (ml)</label>
+        <input id="fMl" type="number" placeholder="e.g. 100" />
+      </div>
+      <div class="form-group">
+        <label>1st Steep (sec)</label>
+        <input id="fSteep" type="number" placeholder="e.g. 20" />
+      </div>
+
+      <div class="form-group full">
+        <label>Tasting Notes</label>
+        <textarea id="fNotes" placeholder="Describe aroma, taste, finish, texture... what did you notice?"></textarea>
+      </div>
+      <div class="form-group full">
+        <label>Would you buy again?</label>
+        <select id="fBuyAgain">
+          <option value="">Not sure yet</option>
+          <option value="yes">Yes, definitely</option>
+          <option value="no">No</option>
+          <option value="maybe">Maybe</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveTea()">Save Entry</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  let teas = [];
+  let editingId = null;
+  let currentRating = 0;
+
+  const TYPE_LABELS = {
+    green: 'Green', white: 'White', yellow: 'Yellow',
+    oolong: 'Oolong', black: 'Hong Cha', puerh: 'Pu-erh', other: 'Other'
+  };
+
+  async function loadFromServer() {
+    try {
+      const res = await fetch('/api/teas');
+      teas = await res.json();
+      render();
+    } catch {
+      console.error('Could not reach server');
+    }
+  }
+
+  function starsHTML(n) {
+    let h = '';
+    for (let i = 1; i <= 5; i++) {
+      h += `<span class="${i <= n ? 'star-filled' : 'star-empty'}">${i <= n ? '★' : '☆'}</span>`;
+    }
+    return h;
+  }
+
+  function typeClass(t) {
+    return 'type-' + (t || 'other');
+  }
+
+  function setRating(n) {
+    currentRating = n;
+    const stars = document.querySelectorAll('#starPicker span');
+    stars.forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
+  }
+
+  function openModal(id = null) {
+    editingId = id;
+    currentRating = 0;
+    document.getElementById('modalTitle').textContent = id ? 'Edit Tea Entry' : 'New Tea Entry';
+
+    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fTemp','fGrams','fMl','fSteep','fNotes','fBuyAgain'];
+    fields.forEach(f => { document.getElementById(f).value = ''; });
+    setRating(0);
+
+    if (id) {
+      const tea = teas.find(t => t.id === id);
+      if (tea) {
+        document.getElementById('fName').value = tea.name || '';
+        document.getElementById('fType').value = tea.type || 'oolong';
+        document.getElementById('fOrigin').value = tea.origin || '';
+        document.getElementById('fVendor').value = tea.vendor || '';
+        document.getElementById('fSeason').value = tea.season || '';
+        document.getElementById('fTemp').value = tea.temp || '';
+        document.getElementById('fGrams').value = tea.grams || '';
+        document.getElementById('fMl').value = tea.ml || '';
+        document.getElementById('fSteep').value = tea.steep || '';
+        document.getElementById('fNotes').value = tea.notes || '';
+        document.getElementById('fBuyAgain').value = tea.buyAgain || '';
+        setRating(tea.rating || 0);
+      }
+    }
+
+    document.getElementById('modalBackdrop').classList.remove('hidden');
+    document.getElementById('fName').focus();
+  }
+
+  function closeModal() {
+    document.getElementById('modalBackdrop').classList.add('hidden');
+    editingId = null;
+  }
+
+  function backdropClick(e) {
+    if (e.target === document.getElementById('modalBackdrop')) closeModal();
+  }
+
+  async function saveTea() {
+    const name = document.getElementById('fName').value.trim();
+    if (!name) { alert('Please enter a tea name.'); return; }
+
+    const body = {
+      name,
+      type: document.getElementById('fType').value,
+      origin: document.getElementById('fOrigin').value.trim(),
+      vendor: document.getElementById('fVendor').value.trim(),
+      season: document.getElementById('fSeason').value.trim(),
+      rating: currentRating,
+      temp: document.getElementById('fTemp').value,
+      grams: document.getElementById('fGrams').value,
+      ml: document.getElementById('fMl').value,
+      steep: document.getElementById('fSteep').value,
+      notes: document.getElementById('fNotes').value.trim(),
+      buyAgain: document.getElementById('fBuyAgain').value,
+    };
+
+    if (editingId) {
+      const res = await fetch(`/api/teas/${editingId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const updated = await res.json();
+      const idx = teas.findIndex(t => t.id === editingId);
+      if (idx !== -1) teas[idx] = updated;
+    } else {
+      const res = await fetch('/api/teas', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const created = await res.json();
+      teas.unshift(created);
+    }
+
+    closeModal();
+    render();
+  }
+
+  async function deleteTea(id) {
+    if (!confirm('Remove this tea entry?')) return;
+    await fetch(`/api/teas/${id}`, { method: 'DELETE' });
+    teas = teas.filter(t => t.id !== id);
+    render();
+  }
+
+  function getFiltered() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const typeF = document.getElementById('filterType').value;
+    const ratingF = document.getElementById('filterRating').value;
+    const sort = document.getElementById('sortBy').value;
+
+    let filtered = teas.filter(t => {
+      if (q && !((t.name||'').toLowerCase().includes(q) || (t.origin||'').toLowerCase().includes(q) || (t.notes||'').toLowerCase().includes(q) || (t.vendor||'').toLowerCase().includes(q))) return false;
+      if (typeF && t.type !== typeF) return false;
+      if (ratingF && t.rating !== parseInt(ratingF)) return false;
+      return true;
+    });
+
+    filtered.sort((a, b) => {
+      if (sort === 'date-desc') return new Date(b.date) - new Date(a.date);
+      if (sort === 'date-asc') return new Date(a.date) - new Date(b.date);
+      if (sort === 'rating-desc') return (b.rating||0) - (a.rating||0);
+      if (sort === 'name-asc') return a.name.localeCompare(b.name);
+      return 0;
+    });
+
+    return filtered;
+  }
+
+  function renderStats() {
+    const total = teas.length;
+    const types = new Set(teas.map(t => t.type)).size;
+    const avg = total ? (teas.reduce((s, t) => s + (t.rating||0), 0) / total).toFixed(1) : '—';
+    document.getElementById('stats').innerHTML = `
+      <div class="stat-card"><div class="num">${total}</div><div class="label">Teas tried</div></div>
+      <div class="stat-card"><div class="num">${types}</div><div class="label">Types explored</div></div>
+      <div class="stat-card"><div class="num">${avg}</div><div class="label">Avg rating</div></div>
+    `;
+  }
+
+  function buyAgainLabel(v) {
+    if (v === 'yes') return '<span style="color:var(--green);font-weight:600">✓ Buy again</span>';
+    if (v === 'no') return '<span style="color:var(--red);font-weight:600">✗ Won\'t rebuy</span>';
+    if (v === 'maybe') return '<span style="color:var(--muted)">~ Maybe</span>';
+    return '';
+  }
+
+  function render() {
+    renderStats();
+    const filtered = getFiltered();
+    const grid = document.getElementById('teaGrid');
+
+    if (filtered.length === 0) {
+      grid.innerHTML = `<div class="empty-state"><div class="icon">🍵</div><p>${teas.length === 0 ? 'No teas yet — add your first entry!' : 'No teas match your filters.'}</p></div>`;
+      return;
+    }
+
+    grid.innerHTML = filtered.map(t => {
+      const hasBrew = t.temp || t.grams || t.steep;
+      const brewHTML = hasBrew ? `
+        <div class="brew-params">
+          <div class="brew-param"><div class="val">${t.temp ? t.temp + '°C' : '—'}</div><div class="key">temp</div></div>
+          <div class="brew-param"><div class="val">${t.grams && t.ml ? t.grams + 'g / ' + t.ml + 'ml' : t.grams ? t.grams + 'g' : '—'}</div><div class="key">ratio</div></div>
+          <div class="brew-param"><div class="val">${t.steep ? t.steep + 's' : '—'}</div><div class="key">1st steep</div></div>
+        </div>` : '';
+
+      const date = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+      return `
+        <div class="tea-card">
+          <div class="card-top">
+            <div>
+              <div class="tea-name">${escHtml(t.name)}</div>
+              <div class="stars" style="margin-top:4px">${starsHTML(t.rating)}</div>
+            </div>
+            <span class="tea-type-badge ${typeClass(t.type)}">${TYPE_LABELS[t.type] || t.type}</span>
+          </div>
+          <div class="tea-meta">
+            ${t.origin ? `<span>📍 ${escHtml(t.origin)}</span>` : ''}
+            ${t.vendor ? `<span>🏪 ${escHtml(t.vendor)}</span>` : ''}
+            ${t.season ? `<span>🗓 ${escHtml(t.season)}</span>` : ''}
+            <span style="margin-left:auto;color:var(--muted)">${date}</span>
+          </div>
+          ${brewHTML}
+          ${t.notes ? `<div class="tea-notes">${escHtml(t.notes)}</div>` : ''}
+          ${t.buyAgain ? `<div style="font-size:0.8rem">${buyAgainLabel(t.buyAgain)}</div>` : ''}
+          <div class="card-actions">
+            <button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent)" onclick="openModal('${t.id}')">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteTea('${t.id}')">Remove</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  // Keyboard shortcut: 'n' to add new tea
+  document.addEventListener('keydown', e => {
+    if (e.key === 'n' && !e.metaKey && !e.ctrlKey && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+      e.preventDefault();
+      openModal();
+    }
+    if (e.key === 'Escape') closeModal();
+  });
+
+  loadFromServer();
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm install:*)",
+      "Bash(curl -s http://localhost:3333/api/teas)"
+    ]
+  }
+}
