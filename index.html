@@ -355,7 +355,7 @@
       </div>
       <div class="form-group">
         <label>1st Steep (sec)</label>
-        <input id="fSteep" type="number" placeholder="e.g. 20" />
+        <input id="fSteep" type="text" placeholder="e.g. 20s, 1min" />
       </div>
 
       <div class="form-group full">
@@ -573,7 +573,7 @@
         <div class="brew-params">
           <div class="brew-param"><div class="val">${t.temp ? t.temp + '°C' : '—'}</div><div class="key">temp</div></div>
           <div class="brew-param"><div class="val">${t.grams && t.ml ? t.grams + ' / ' + t.ml + 'ml' : t.grams ? t.grams : t.ml ? t.ml + 'ml' : '—'}</div><div class="key">ratio</div></div>
-          <div class="brew-param"><div class="val">${t.steep ? t.steep + 's' : '—'}</div><div class="key">1st steep</div></div>
+          <div class="brew-param"><div class="val">${t.steep ? (/^\d+$/.test(t.steep) ? t.steep + 's' : t.steep) : '—'}</div><div class="key">1st steep</div></div>
         </div>` : '';
 
       const date = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
