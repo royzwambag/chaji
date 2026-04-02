@@ -280,7 +280,8 @@
       <option value="1">★ Disliked</option>
     </select>
     <select id="filterBuyAgain" onchange="render()">
-      <option value="">All buy again</option>
+      <option value="">All</option>
+      <option value="not-tried">Did not try yet</option>
       <option value="yes">✓ Buy again</option>
       <option value="maybe">~ Maybe</option>
       <option value="no">✗ Won't rebuy</option>
@@ -346,7 +347,7 @@
       </div>
       <div class="form-group">
         <label>Tea amount (g)</label>
-        <input id="fGrams" type="number" placeholder="e.g. 5" step="0.5" />
+        <input id="fGrams" type="text" placeholder="e.g. 5, 2-3g, 1 ball" />
       </div>
       <div class="form-group">
         <label>Water (ml)</label>
@@ -364,7 +365,7 @@
       <div class="form-group full">
         <label>Would you buy again?</label>
         <select id="fBuyAgain">
-          <option value="">Not sure yet</option>
+          <option value="not-tried">Did not try yet</option>
           <option value="yes">Yes, definitely</option>
           <option value="no">No</option>
           <option value="maybe">Maybe</option>
@@ -532,9 +533,10 @@
   }
 
   function renderStats() {
-    const total = teas.length;
-    const types = new Set(teas.map(t => t.type)).size;
-    const rated = teas.filter(t => t.rating);
+    const tried = teas.filter(t => t.buyAgain !== 'not-tried');
+    const total = tried.length;
+    const types = new Set(tried.map(t => t.type)).size;
+    const rated = tried.filter(t => t.rating);
     const avg = rated.length ? (rated.reduce((s, t) => s + t.rating, 0) / rated.length).toFixed(1) : '—';
     document.getElementById('stats').innerHTML = `
       <div class="stat-card"><div class="num">${total}</div><div class="label">Teas tried</div></div>
@@ -547,6 +549,7 @@
     if (v === 'yes') return '<span style="color:var(--green);font-weight:600">✓ Buy again</span>';
     if (v === 'no') return '<span style="color:var(--red);font-weight:600">✗ Won\'t rebuy</span>';
     if (v === 'maybe') return '<span style="color:var(--muted)">~ Maybe</span>';
+    if (v === 'not-tried') return '<span style="color:var(--muted)">Not tried yet</span>';
     return '';
   }
 
@@ -565,7 +568,7 @@
       const brewHTML = hasBrew ? `
         <div class="brew-params">
           <div class="brew-param"><div class="val">${t.temp ? t.temp + '°C' : '—'}</div><div class="key">temp</div></div>
-          <div class="brew-param"><div class="val">${t.grams && t.ml ? t.grams + 'g / ' + t.ml + 'ml' : t.grams ? t.grams + 'g' : '—'}</div><div class="key">ratio</div></div>
+          <div class="brew-param"><div class="val">${t.grams && t.ml ? t.grams + ' / ' + t.ml + 'ml' : t.grams ? t.grams : t.ml ? t.ml + 'ml' : '—'}</div><div class="key">ratio</div></div>
           <div class="brew-param"><div class="val">${t.steep ? t.steep + 's' : '—'}</div><div class="key">1st steep</div></div>
         </div>` : '';
 
