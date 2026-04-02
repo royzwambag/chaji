@@ -422,8 +422,9 @@
     currentRating = 0;
     document.getElementById('modalTitle').textContent = id ? 'Edit Tea Entry' : 'New Tea Entry';
 
-    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fTemp','fGrams','fMl','fSteep','fNotes','fBuyAgain'];
+    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fTemp','fGrams','fMl','fSteep','fNotes'];
     fields.forEach(f => { document.getElementById(f).value = ''; });
+    document.getElementById('fBuyAgain').value = 'not-tried';
     setRating(0);
 
     if (id) {
@@ -522,6 +523,9 @@
     });
 
     filtered.sort((a, b) => {
+      const aUntried = a.buyAgain === 'not-tried' ? 1 : 0;
+      const bUntried = b.buyAgain === 'not-tried' ? 1 : 0;
+      if (aUntried !== bUntried) return aUntried - bUntried;
       if (sort === 'date-desc') return new Date(b.date) - new Date(a.date);
       if (sort === 'date-asc') return new Date(a.date) - new Date(b.date);
       if (sort === 'rating-desc') return (b.rating||0) - (a.rating||0);
@@ -549,7 +553,7 @@
     if (v === 'yes') return '<span style="color:var(--green);font-weight:600">✓ Buy again</span>';
     if (v === 'no') return '<span style="color:var(--red);font-weight:600">✗ Won\'t rebuy</span>';
     if (v === 'maybe') return '<span style="color:var(--muted)">~ Maybe</span>';
-    if (v === 'not-tried') return '<span style="color:var(--muted)">Not tried yet</span>';
+    if (v === 'not-tried') return '<span style="color:var(--muted)">Did not try yet</span>';
     return '';
   }
 
