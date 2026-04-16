@@ -371,6 +371,10 @@
           <option value="maybe">Maybe</option>
         </select>
       </div>
+      <div class="form-group full">
+        <label>Purchase Link</label>
+        <input id="fLink" type="url" />
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Cancel</button>
@@ -422,7 +426,7 @@
     currentRating = 0;
     document.getElementById('modalTitle').textContent = id ? 'Edit Tea Entry' : 'New Tea Entry';
 
-    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fTemp','fGrams','fMl','fSteep','fNotes'];
+    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fTemp','fGrams','fMl','fSteep','fNotes','fLink'];
     fields.forEach(f => { document.getElementById(f).value = ''; });
     document.getElementById('fBuyAgain').value = 'not-tried';
     setRating(0);
@@ -441,6 +445,7 @@
         document.getElementById('fSteep').value = tea.steep || '';
         document.getElementById('fNotes').value = tea.notes || '';
         document.getElementById('fBuyAgain').value = tea.buyAgain || '';
+        document.getElementById('fLink').value = tea.purchaseLink || '';
         setRating(tea.rating || 0);
       }
     }
@@ -475,6 +480,7 @@
       steep: document.getElementById('fSteep').value,
       notes: document.getElementById('fNotes').value.trim(),
       buyAgain: document.getElementById('fBuyAgain').value,
+      purchaseLink: document.getElementById('fLink').value.trim(),
     };
 
     if (editingId) {
@@ -599,6 +605,7 @@
           <div class="card-actions">
             <button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent)" onclick="openModal('${t.id}')">Edit</button>
             <button class="btn btn-sm btn-danger" onclick="deleteTea('${t.id}')">Remove</button>
+            ${t.purchaseLink ? `<a href="${escHtml(t.purchaseLink)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:#dbeafe;color:#1d4ed8;text-decoration:none">Buy</a>` : ''}
           </div>
         </div>
       `;
