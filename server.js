@@ -69,23 +69,19 @@ function requireAuth(req, res, next) {
   next();
 }
 
-function isValidEmail(s) {
-  return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
-}
-
 app.post('/api/auth/login', async (req, res) => {
   try {
-    const email = (req.body.email || '').trim().toLowerCase();
+    const username = (req.body.username || '').trim().toLowerCase();
     const password = req.body.password || '';
     const result = await pool.query(
-      'SELECT id, email, password_hash FROM users WHERE email = $1',
-      [email]
+      'SELECT id, username, password_hash FROM users WHERE username = $1',
+      [username]
     );
     const user = result.rows[0];
     const ok = user && await bcrypt.compare(password, user.password_hash);
-    if (!ok) return res.status(401).json({ error: 'Invalid email or password' });
+    if (!ok) return res.status(401).json({ error: 'Invalid username or password' });
     req.session.userId = user.id;
-    res.json({ email: user.email });
+    res.json({ username: user.username });
   } catch (err) {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
@@ -101,13 +97,13 @@ app.post('/api/auth/logout', (req, res) => {
 
 app.get('/api/auth/me', async (req, res) => {
   if (!req.session.userId) return res.status(401).json({ error: 'Not signed in' });
-  const result = await pool.query('SELECT email FROM users WHERE id = $1', [req.session.userId]);
+  const result = await pool.query('SELECT username FROM users WHERE id = $1', [req.session.userId]);
   const user = result.rows[0];
   if (!user) {
     req.session.destroy(() => {});
     return res.status(401).json({ error: 'Not signed in' });
   }
-  res.json({ email: user.email });
+  res.json({ username: user.username });
 });
 
 // ─── Teas ───────────────────────────────────────────────────────

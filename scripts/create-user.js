@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 // Creates a user account directly in the database.
 // Usage:
-//   node scripts/create-user.js <email>              (prompts for password)
-//   node scripts/create-user.js <email> <password>   (password as arg — visible in shell history)
+//   node scripts/create-user.js <username>              (prompts for password)
+//   node scripts/create-user.js <username> <password>   (password as arg — visible in shell history)
 
 import readline from 'readline';
 import pg from 'pg';
 import bcrypt from 'bcrypt';
 import 'dotenv/config';
 
-const email = (process.argv[2] || '').trim().toLowerCase();
+const username = (process.argv[2] || '').trim().toLowerCase();
 const passwordArg = process.argv[3];
 
-if (!email) {
-  console.error('Usage: node scripts/create-user.js <email> [password]');
+if (!username) {
+  console.error('Usage: node scripts/create-user.js <username> [password]');
   process.exit(1);
 }
-if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-  console.error('Invalid email');
+if (!/^[a-z0-9_.-]{3,32}$/.test(username)) {
+  console.error('Username must be 3–32 chars, lowercase letters/digits/_/./-');
   process.exit(1);
 }
 if (!process.env.DATABASE_URL) {
@@ -74,13 +74,13 @@ function promptPassword() {
   try {
     const hash = await bcrypt.hash(password, 12);
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
-      [email, hash]
+      'INSERT INTO users (username, password_hash) VALUES ($1, $2) RETURNING id, username',
+      [username, hash]
     );
-    console.log(`Created user #${result.rows[0].id}: ${result.rows[0].email}`);
+    console.log(`Created user #${result.rows[0].id}: ${result.rows[0].username}`);
   } catch (err) {
     if (err.code === '23505') {
-      console.error(`User ${email} already exists`);
+      console.error(`User ${username} already exists`);
       process.exit(1);
     }
     throw err;

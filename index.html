@@ -684,8 +684,8 @@
     <p class="auth-subtitle">Sign in to your tea journal</p>
     <form id="authForm" onsubmit="submitAuth(event)">
       <div class="form-group">
-        <label>Email</label>
-        <input type="email" id="authEmail" required autocomplete="email" />
+        <label>Username</label>
+        <input type="text" id="authUsername" required autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" />
       </div>
       <div class="form-group">
         <label>Password</label>
@@ -870,7 +870,7 @@
       const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
       if (res.ok) {
         const data = await res.json();
-        currentUser = data.email;
+        currentUser = data.username;
         showApp();
         await loadFromServer();
       } else {
@@ -888,7 +888,7 @@
     document.getElementById('logoutBtn').classList.add('hidden');
     document.getElementById('addTeaBtn').style.display = 'none';
     closeModal();
-    setTimeout(() => document.getElementById('authEmail').focus(), 50);
+    setTimeout(() => document.getElementById('authUsername').focus(), 50);
   }
 
   function showApp() {
@@ -914,7 +914,7 @@
   async function submitAuth(e) {
     e.preventDefault();
     clearAuthError();
-    const email = document.getElementById('authEmail').value.trim();
+    const username = document.getElementById('authUsername').value.trim().toLowerCase();
     const password = document.getElementById('authPassword').value;
     const btn = document.getElementById('authSubmitBtn');
     btn.disabled = true;
@@ -924,11 +924,11 @@
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Sign in failed');
-      currentUser = data.email;
+      currentUser = data.username;
       document.getElementById('authForm').reset();
       showApp();
       await loadFromServer();

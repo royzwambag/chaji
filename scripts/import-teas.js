@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Imports teas.json into an existing user's account.
-// Usage: node scripts/import-teas.js <email> [path/to/teas.json]
+// Usage: node scripts/import-teas.js <username> [path/to/teas.json]
 
 import fs from 'fs';
 import path from 'path';
@@ -10,11 +10,11 @@ import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const email = (process.argv[2] || '').trim().toLowerCase();
+const username = (process.argv[2] || '').trim().toLowerCase();
 const teasPath = process.argv[3] || path.join(__dirname, '..', 'teas.json');
 
-if (!email) {
-  console.error('Usage: node scripts/import-teas.js <email> [path/to/teas.json]');
+if (!username) {
+  console.error('Usage: node scripts/import-teas.js <username> [path/to/teas.json]');
   process.exit(1);
 }
 if (!process.env.DATABASE_URL) {
@@ -55,9 +55,9 @@ const pool = new pg.Pool({
 });
 
 (async () => {
-  const userResult = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+  const userResult = await pool.query('SELECT id FROM users WHERE username = $1', [username]);
   if (userResult.rows.length === 0) {
-    console.error(`No user with email "${email}". Register that account in the app first.`);
+    console.error(`No user with username "${username}". Create the account first with scripts/create-user.js.`);
     process.exit(1);
   }
   const userId = userResult.rows[0].id;
@@ -96,7 +96,7 @@ const pool = new pg.Pool({
     }
   }
 
-  console.log(`Imported ${inserted} teas for ${email} (skipped ${skipped}).`);
+  console.log(`Imported ${inserted} teas for ${username} (skipped ${skipped}).`);
   await pool.end();
 })().catch(err => {
   console.error(err);
