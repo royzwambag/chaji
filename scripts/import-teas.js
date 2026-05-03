@@ -42,8 +42,13 @@ function migrateTea(tea) {
   return { ...rest, sessions };
 }
 
+function withLibpqCompat(url) {
+  if (!url || url.includes('uselibpqcompat=')) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'uselibpqcompat=true';
+}
+
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: withLibpqCompat(process.env.DATABASE_URL),
   ssl: process.env.DATABASE_URL.includes('sslmode=disable')
     ? false
     : { rejectUnauthorized: false },

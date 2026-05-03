@@ -29,6 +29,6 @@ spec:
   databases:
     - name: db
       engine: PG
-      version: "16"
+      version: "18"
       production: false
       cluster_name: chaji-db

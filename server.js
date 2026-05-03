@@ -24,11 +24,16 @@ if (!process.env.SESSION_SECRET) {
 }
 
 const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: withLibpqCompat(process.env.DATABASE_URL),
   ssl: process.env.DATABASE_URL.includes('sslmode=disable')
     ? false
     : { rejectUnauthorized: false },
 });
+
+function withLibpqCompat(url) {
+  if (!url || url.includes('uselibpqcompat=')) return url;
+  return url + (url.includes('?') ? '&' : '?') + 'uselibpqcompat=true';
+}
 
 async function initSchema() {
   const schema = fs.readFileSync(path.join(__dirname, 'db', 'schema.sql'), 'utf8');
