@@ -73,32 +73,6 @@ function isValidEmail(s) {
   return typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length <= 254;
 }
 
-app.post('/api/auth/register', async (req, res) => {
-  try {
-    const email = (req.body.email || '').trim().toLowerCase();
-    const password = req.body.password || '';
-    if (!isValidEmail(email)) return res.status(400).json({ error: 'Invalid email' });
-    if (password.length < 8) return res.status(400).json({ error: 'Password must be at least 8 characters' });
-
-    const hash = await bcrypt.hash(password, 12);
-    let result;
-    try {
-      result = await pool.query(
-        'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
-        [email, hash]
-      );
-    } catch (err) {
-      if (err.code === '23505') return res.status(409).json({ error: 'Email already registered' });
-      throw err;
-    }
-    req.session.userId = result.rows[0].id;
-    res.json({ email: result.rows[0].email });
-  } catch (err) {
-    console.error('Register error:', err);
-    res.status(500).json({ error: 'Server error' });
-  }
-});
-
 app.post('/api/auth/login', async (req, res) => {
   try {
     const email = (req.body.email || '').trim().toLowerCase();

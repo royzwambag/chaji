@@ -637,28 +637,6 @@
       font-size: 0.85rem;
       margin: 6px 0 22px;
     }
-    .auth-tabs {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      margin-bottom: 18px;
-      border-bottom: 1px solid var(--border);
-    }
-    .auth-tab {
-      background: none;
-      border: none;
-      padding: 10px;
-      font-family: inherit;
-      font-size: 0.9rem;
-      color: var(--muted);
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      font-weight: 600;
-      margin-bottom: -1px;
-    }
-    .auth-tab.active {
-      color: var(--accent);
-      border-bottom-color: var(--accent);
-    }
     .auth-card .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
     .auth-card label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
     .auth-error {
@@ -704,10 +682,6 @@
   <div class="auth-card">
     <h2>茶记 Cha Ji</h2>
     <p class="auth-subtitle">Sign in to your tea journal</p>
-    <div class="auth-tabs">
-      <button type="button" class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign in</button>
-      <button type="button" class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Create account</button>
-    </div>
     <form id="authForm" onsubmit="submitAuth(event)">
       <div class="form-group">
         <label>Email</label>
@@ -880,7 +854,6 @@
   };
 
   let currentUser = null;
-  let authMode = 'login';
 
   async function api(path, opts = {}) {
     const res = await fetch(path, { credentials: 'same-origin', ...opts });
@@ -928,16 +901,6 @@
     document.getElementById('addTeaBtn').style.display = '';
   }
 
-  function switchAuthTab(mode) {
-    authMode = mode;
-    document.querySelectorAll('.auth-tab').forEach(t => {
-      t.classList.toggle('active', t.dataset.tab === mode);
-    });
-    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Sign in' : 'Create account';
-    document.getElementById('authPassword').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
-    clearAuthError();
-  }
-
   function showAuthError(msg) {
     const el = document.getElementById('authError');
     el.textContent = msg;
@@ -955,9 +918,9 @@
     const password = document.getElementById('authPassword').value;
     const btn = document.getElementById('authSubmitBtn');
     btn.disabled = true;
-    btn.textContent = authMode === 'login' ? 'Signing in…' : 'Creating account…';
+    btn.textContent = 'Signing in…';
     try {
-      const res = await fetch(`/api/auth/${authMode}`, {
+      const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'same-origin',
@@ -973,7 +936,7 @@
       showAuthError(err.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = authMode === 'login' ? 'Sign in' : 'Create account';
+      btn.textContent = 'Sign in';
     }
   }
 
