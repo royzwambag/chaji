@@ -6,13 +6,13 @@
   <title>Cha Ji — Tea Journal</title>
   <style>
     :root {
-      --bg: #faf7f2;
+      --bg: #f5f6f1;
       --surface: #ffffff;
-      --border: #e8e0d5;
-      --text: #2c2416;
-      --muted: #8a7560;
-      --accent: #7a5c3a;
-      --accent-light: #f0e8dc;
+      --border: #dee3d6;
+      --text: #1c2418;
+      --muted: #6e7a68;
+      --accent: #2f5a3a;
+      --accent-light: #e1ebdd;
       --green: #4a7c59;
       --red: #a63d2f;
       --yellow: #c49a2b;
@@ -238,9 +238,451 @@
     .type-dark { background: #e0d4f0; color: #4a2a70; }
     .type-other { background: #e8eaf0; color: #3a4070; }
 
+    /* Brew Helper */
+    .helper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 24px;
+    }
+    .helper-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+    .helper-title h2 {
+      font-size: 1.1rem;
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .helper-title .sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+    .helper-row {
+      display: flex;
+      gap: 8px;
+      align-items: stretch;
+      margin-bottom: 10px;
+    }
+    .helper-row input[type="text"] { flex: 1; min-width: 0; }
+    .photo-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 12px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      cursor: pointer;
+      color: var(--accent);
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+    .photo-btn:hover { background: var(--accent-light); }
+    .photo-btn.has-image {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    input[type="file"] { display: none; }
+    #imagePreview { margin-bottom: 10px; }
+    #imagePreview img {
+      max-width: 180px;
+      max-height: 180px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      display: block;
+    }
+    .image-preview-wrap {
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+    .clear-image {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 0.2rem 0.4rem;
+      line-height: 1;
+    }
+    .clear-image:hover { color: var(--red); }
+
+    .helper-options {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    @media (min-width: 600px) {
+      .helper-options { grid-template-columns: 1fr 1fr; }
+    }
+    .method-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .method-btn {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 9px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      color: var(--text);
+      transition: all 0.15s;
+      text-align: center;
+    }
+    .method-btn strong { font-weight: 600; display: block; }
+    .method-btn span { font-size: 0.7rem; color: var(--muted); }
+    .method-btn:hover { background: var(--accent-light); }
+    .method-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    .method-btn.active span { color: rgba(255,255,255,0.85); }
+
+    .brew-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-family: inherit;
+      cursor: pointer;
+      font-weight: 600;
+      transition: opacity 0.15s;
+    }
+    .brew-btn:hover:not(:disabled) { opacity: 0.9; }
+    .brew-btn:disabled { background: var(--muted); cursor: wait; }
+
+    /* Brew result */
+    #brewResult { margin-top: 16px; }
+    #brewResult.hidden { display: none; }
+    .brew-result {
+      border-top: 1px solid var(--border);
+      padding-top: 16px;
+    }
+    .brew-result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+    .brew-result-header h3 {
+      font-size: 1.05rem;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .brew-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+    .brew-badge {
+      background: var(--accent-light);
+      color: var(--accent);
+      padding: 3px 9px;
+      border-radius: 99px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .param-cell {
+      background: var(--bg);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .param-cell .k {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 2px;
+    }
+    .param-cell .v {
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    @media (min-width: 540px) {
+      .params-grid { grid-template-columns: repeat(4, 1fr); }
+    }
+    .brew-section { margin-bottom: 12px; }
+    .brew-section h4 {
+      font-size: 0.78rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+    .brew-section p { font-size: 0.88rem; line-height: 1.5; color: #4a3f32; }
+    .steeps-list { display: flex; flex-direction: column; gap: 4px; }
+    .steep-row {
+      display: grid;
+      grid-template-columns: 26px 70px 1fr;
+      gap: 10px;
+      align-items: start;
+      padding: 8px 10px;
+      background: var(--bg);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+    .steep-num-circle {
+      background: var(--accent);
+      color: #fff;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 0.75rem;
+    }
+    .steep-dur {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      font-size: 0.85rem;
+    }
+    .steep-desc { font-size: 0.82rem; color: #4a3f32; line-height: 1.4; }
+    .flavor-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+    .chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 3px 10px;
+      border-radius: 99px;
+      font-size: 0.78rem;
+      color: #4a3f32;
+    }
+    .save-row {
+      margin-top: 14px;
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+    .helper-error {
+      color: var(--red);
+      padding: 10px 12px;
+      background: #fef2f2;
+      border-radius: 8px;
+      border: 1px solid #fecaca;
+      font-size: 0.85rem;
+    }
+    .helper-loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--muted);
+      font-style: italic;
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* Sessions on tea card */
+    .session-toggle {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 0.78rem;
+      padding: 4px 0;
+      text-align: left;
+      font-family: inherit;
+      font-weight: 600;
+    }
+    .session-toggle:hover { color: var(--accent); }
+    .all-sessions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .all-sessions.hidden { display: none; }
+    .session-row {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 0.78rem;
+    }
+    .session-row .meta {
+      color: var(--muted);
+      font-size: 0.72rem;
+      margin-bottom: 3px;
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .session-row .params {
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .session-row .session-notes {
+      color: #4a3f32;
+      margin-top: 4px;
+      line-height: 1.4;
+    }
+
+    /* Sessions section in modal */
+    .sessions-section {
+      grid-column: 1/-1;
+      margin-top: 8px;
+      padding-top: 16px;
+      border-top: 1px solid var(--border);
+    }
+    .sessions-section h3 {
+      font-size: 0.95rem;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+    .sessions-section .sub {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .session-edit {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 10px;
+    }
+    .session-edit-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+    .session-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1.4rem;
+      line-height: 1;
+      padding: 0 6px;
+    }
+    .session-remove:hover { color: var(--red); }
+    .session-edit-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+    .session-edit-grid .form-group { min-width: 0; }
+    .session-edit-grid .form-group.full { grid-column: 1/-1; }
+    .session-edit-grid input,
+    .session-edit-grid textarea {
+      background: var(--surface);
+      width: 100%;
+      min-width: 0;
+    }
+    .add-session-btn {
+      width: 100%;
+      background: var(--accent-light);
+      color: var(--accent);
+      border: 1px dashed var(--accent);
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 600;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    .add-session-btn:hover { background: var(--accent); color: #fff; }
+    .empty-sessions {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 12px;
+    }
+
+    /* Auth screen */
+    main.hidden { display: none; }
+    .auth-screen {
+      min-height: calc(100vh - 80px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .auth-screen.hidden { display: none; }
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      width: 100%;
+      max-width: 400px;
+    }
+    .auth-card h2 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      text-align: center;
+    }
+    .auth-subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+      margin: 6px 0 22px;
+    }
+    .auth-tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+    }
+    .auth-tab {
+      background: none;
+      border: none;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      font-weight: 600;
+      margin-bottom: -1px;
+    }
+    .auth-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .auth-card .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+    .auth-card label { font-size: 0.8rem; font-weight: 600; color: var(--muted); }
+    .auth-error {
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      color: var(--red);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      margin-bottom: 12px;
+    }
+    .auth-error.hidden { display: none; }
+    .user-badge {
+      font-size: 0.78rem;
+      opacity: 0.85;
+      margin-right: 4px;
+    }
+    .user-badge.hidden { display: none; }
+    #logoutBtn.hidden { display: none; }
+
     @media (max-width: 480px) {
       .form-grid { grid-template-columns: 1fr; }
       .brew-params { grid-template-columns: 1fr 1fr; }
+      .session-edit-grid { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
@@ -252,11 +694,67 @@
     <p>Gong Fu Cha Journal</p>
   </div>
   <div class="header-right">
-    <button class="btn btn-primary" onclick="openModal()">+ Add Tea</button>
+    <span id="userBadge" class="user-badge hidden"></span>
+    <button class="btn btn-primary" id="addTeaBtn" onclick="openModal()" style="display:none">+ Add Tea</button>
+    <button class="btn btn-primary hidden" id="logoutBtn" onclick="logout()">Sign out</button>
   </div>
 </header>
 
-<main>
+<section class="auth-screen hidden" id="authScreen">
+  <div class="auth-card">
+    <h2>茶记 Cha Ji</h2>
+    <p class="auth-subtitle">Sign in to your tea journal</p>
+    <div class="auth-tabs">
+      <button type="button" class="auth-tab active" data-tab="login" onclick="switchAuthTab('login')">Sign in</button>
+      <button type="button" class="auth-tab" data-tab="register" onclick="switchAuthTab('register')">Create account</button>
+    </div>
+    <form id="authForm" onsubmit="submitAuth(event)">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="authEmail" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="authPassword" required autocomplete="current-password" minlength="8" />
+      </div>
+      <div id="authError" class="auth-error hidden"></div>
+      <button type="submit" id="authSubmitBtn" class="brew-btn">Sign in</button>
+    </form>
+  </div>
+</section>
+
+<main class="hidden" id="appMain">
+  <section class="helper">
+    <div class="helper-title">
+      <h2>Brew Helper</h2>
+      <span class="sub">Ask the tea master</span>
+    </div>
+    <div class="helper-row">
+      <input type="text" id="helperTea" placeholder="Tea name or paste a link…" />
+      <label for="helperImage" class="photo-btn" title="Scan packaging photo" aria-label="Upload packaging photo">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+          <circle cx="12" cy="13" r="4"/>
+        </svg>
+      </label>
+      <input type="file" id="helperImage" accept="image/*" />
+    </div>
+    <div id="imagePreview"></div>
+    <div class="helper-options">
+      <div class="method-buttons">
+        <button type="button" class="method-btn active" data-method="gaiwan">
+          <strong>Gaiwan / Teapot</strong><span>Gong Fu</span>
+        </button>
+        <button type="button" class="method-btn" data-method="western">
+          <strong>Western</strong><span>Mug / Pot</span>
+        </button>
+      </div>
+      <input type="text" id="helperVessel" placeholder="Vessel size (optional) — e.g. 100ml gaiwan" />
+    </div>
+    <button id="brewBtn" class="brew-btn">Get Brewing Instructions</button>
+    <div id="brewResult" class="hidden"></div>
+  </section>
+
   <div class="stats" id="stats"></div>
 
   <div class="controls">
@@ -341,27 +839,6 @@
         </div>
       </div>
 
-      <div class="form-group">
-        <label>Water Temp (°C)</label>
-        <input id="fTemp" type="number" placeholder="e.g. 90" min="50" max="100" />
-      </div>
-      <div class="form-group">
-        <label>Tea amount (g)</label>
-        <input id="fGrams" type="text" placeholder="e.g. 5, 2-3g, 1 ball" />
-      </div>
-      <div class="form-group">
-        <label>Water (ml)</label>
-        <input id="fMl" type="number" placeholder="e.g. 100" />
-      </div>
-      <div class="form-group">
-        <label>1st Steep (sec)</label>
-        <input id="fSteep" type="text" placeholder="e.g. 20s, 1min" />
-      </div>
-
-      <div class="form-group full">
-        <label>Tasting Notes</label>
-        <textarea id="fNotes" placeholder="Describe aroma, taste, finish, texture... what did you notice?"></textarea>
-      </div>
       <div class="form-group full">
         <label>Would you buy again?</label>
         <select id="fBuyAgain">
@@ -375,6 +852,13 @@
         <label>Purchase Link</label>
         <input id="fLink" type="url" />
       </div>
+
+      <div class="sessions-section">
+        <h3>Brew Sessions</h3>
+        <div class="sub">Each time you brew this tea with different params, add a session.</div>
+        <div id="sessionsList"></div>
+        <button type="button" class="add-session-btn" onclick="addModalSession()">+ Add Session</button>
+      </div>
     </div>
     <div class="modal-actions">
       <button class="btn" onclick="closeModal()">Cancel</button>
@@ -387,19 +871,129 @@
   let teas = [];
   let editingId = null;
   let currentRating = 0;
+  let modalSessions = [];
+  let expandedSessions = new Set();
 
   const TYPE_LABELS = {
     green: 'Green', white: 'White', yellow: 'Yellow',
     oolong: 'Oolong', black: 'Hong Cha', dark: 'Dark', other: 'Other'
   };
 
+  let currentUser = null;
+  let authMode = 'login';
+
+  async function api(path, opts = {}) {
+    const res = await fetch(path, { credentials: 'same-origin', ...opts });
+    if (res.status === 401 && currentUser) {
+      currentUser = null;
+      showAuth();
+      throw new Error('Session expired');
+    }
+    return res;
+  }
+
+  async function init() {
+    try {
+      const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+      if (res.ok) {
+        const data = await res.json();
+        currentUser = data.email;
+        showApp();
+        await loadFromServer();
+      } else {
+        showAuth();
+      }
+    } catch {
+      showAuth();
+    }
+  }
+
+  function showAuth() {
+    document.getElementById('authScreen').classList.remove('hidden');
+    document.getElementById('appMain').classList.add('hidden');
+    document.getElementById('userBadge').classList.add('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+    document.getElementById('addTeaBtn').style.display = 'none';
+    closeModal();
+    setTimeout(() => document.getElementById('authEmail').focus(), 50);
+  }
+
+  function showApp() {
+    document.getElementById('authScreen').classList.add('hidden');
+    document.getElementById('appMain').classList.remove('hidden');
+    const badge = document.getElementById('userBadge');
+    badge.textContent = currentUser || '';
+    badge.classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+    document.getElementById('addTeaBtn').style.display = '';
+  }
+
+  function switchAuthTab(mode) {
+    authMode = mode;
+    document.querySelectorAll('.auth-tab').forEach(t => {
+      t.classList.toggle('active', t.dataset.tab === mode);
+    });
+    document.getElementById('authSubmitBtn').textContent = mode === 'login' ? 'Sign in' : 'Create account';
+    document.getElementById('authPassword').autocomplete = mode === 'login' ? 'current-password' : 'new-password';
+    clearAuthError();
+  }
+
+  function showAuthError(msg) {
+    const el = document.getElementById('authError');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+  }
+
+  function clearAuthError() {
+    document.getElementById('authError').classList.add('hidden');
+  }
+
+  async function submitAuth(e) {
+    e.preventDefault();
+    clearAuthError();
+    const email = document.getElementById('authEmail').value.trim();
+    const password = document.getElementById('authPassword').value;
+    const btn = document.getElementById('authSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = authMode === 'login' ? 'Signing in…' : 'Creating account…';
+    try {
+      const res = await fetch(`/api/auth/${authMode}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Sign in failed');
+      currentUser = data.email;
+      document.getElementById('authForm').reset();
+      showApp();
+      await loadFromServer();
+    } catch (err) {
+      showAuthError(err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = authMode === 'login' ? 'Sign in' : 'Create account';
+    }
+  }
+
+  async function logout() {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    } catch {}
+    currentUser = null;
+    teas = [];
+    render();
+    showAuth();
+  }
+
   async function loadFromServer() {
     try {
-      const res = await fetch('/api/teas');
+      const res = await api('/api/teas');
       teas = await res.json();
       render();
-    } catch {
-      console.error('Could not reach server');
+    } catch (err) {
+      if (err.message !== 'Session expired') console.error('Could not reach server', err);
     }
   }
 
@@ -421,12 +1015,13 @@
     stars.forEach((s, i) => { s.textContent = i < n ? '★' : '☆'; });
   }
 
-  function openModal(id = null) {
+  function openModal(id = null, prefill = null, opts = {}) {
     editingId = id;
     currentRating = 0;
+    modalSessions = [];
     document.getElementById('modalTitle').textContent = id ? 'Edit Tea Entry' : 'New Tea Entry';
 
-    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fTemp','fGrams','fMl','fSteep','fNotes','fLink'];
+    const fields = ['fName','fType','fOrigin','fVendor','fSeason','fLink'];
     fields.forEach(f => { document.getElementById(f).value = ''; });
     document.getElementById('fBuyAgain').value = 'not-tried';
     setRating(0);
@@ -439,19 +1034,97 @@
         document.getElementById('fOrigin').value = tea.origin || '';
         document.getElementById('fVendor').value = tea.vendor || '';
         document.getElementById('fSeason').value = tea.season || '';
-        document.getElementById('fTemp').value = tea.temp || '';
-        document.getElementById('fGrams').value = tea.grams || '';
-        document.getElementById('fMl').value = tea.ml || '';
-        document.getElementById('fSteep').value = tea.steep || '';
-        document.getElementById('fNotes').value = tea.notes || '';
-        document.getElementById('fBuyAgain').value = tea.buyAgain || '';
+        document.getElementById('fBuyAgain').value = tea.buyAgain || 'not-tried';
         document.getElementById('fLink').value = tea.purchaseLink || '';
         setRating(tea.rating || 0);
+        modalSessions = (tea.sessions || []).map(s => ({ ...s }));
       }
+    } else if (prefill) {
+      if (prefill.name) document.getElementById('fName').value = prefill.name;
+      if (prefill.type) document.getElementById('fType').value = prefill.type;
+      if (prefill.origin) document.getElementById('fOrigin').value = prefill.origin;
+      if (prefill.session) modalSessions.push(makeSession(prefill.session));
     }
 
+    if (opts.addBlankSession) addModalSession();
+
+    renderModalSessions();
     document.getElementById('modalBackdrop').classList.remove('hidden');
     document.getElementById('fName').focus();
+  }
+
+  function makeSession(prefill = {}) {
+    return {
+      id: 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      date: prefill.date || new Date().toISOString(),
+      temp: prefill.temp != null ? String(prefill.temp) : '',
+      grams: prefill.grams || '',
+      ml: prefill.ml != null ? String(prefill.ml) : '',
+      steep: prefill.steep || '',
+      notes: prefill.notes || '',
+    };
+  }
+
+  function addModalSession(prefill = {}) {
+    modalSessions.push(makeSession(prefill));
+    renderModalSessions();
+    const list = document.getElementById('sessionsList');
+    const last = list.querySelector('.session-edit:last-child input');
+    if (last) last.focus();
+  }
+
+  function removeModalSession(idx) {
+    modalSessions.splice(idx, 1);
+    renderModalSessions();
+  }
+
+  function updateModalSession(idx, field, value) {
+    if (modalSessions[idx]) modalSessions[idx][field] = value;
+  }
+
+  function renderModalSessions() {
+    const container = document.getElementById('sessionsList');
+    if (!container) return;
+    if (modalSessions.length === 0) {
+      container.innerHTML = '<div class="empty-sessions">No sessions yet — click "+ Add Session" to record one.</div>';
+      return;
+    }
+    container.innerHTML = modalSessions.map((s, i) => {
+      const dateLabel = s.date ? new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+      return `
+        <div class="session-edit">
+          <div class="session-edit-head">
+            <span>Session ${i + 1}${dateLabel ? ' — ' + dateLabel : ''}</span>
+            <button type="button" class="session-remove" onclick="removeModalSession(${i})" title="Remove session">&times;</button>
+          </div>
+          <div class="session-edit-grid">
+            <div class="form-group">
+              <label>Temp (°C)</label>
+              <input type="number" value="${escAttr(s.temp)}" oninput="updateModalSession(${i}, 'temp', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>Leaf (g)</label>
+              <input type="text" value="${escAttr(s.grams)}" oninput="updateModalSession(${i}, 'grams', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>Water (ml)</label>
+              <input type="number" value="${escAttr(s.ml)}" oninput="updateModalSession(${i}, 'ml', this.value)" />
+            </div>
+            <div class="form-group">
+              <label>1st Steep</label>
+              <input type="text" value="${escAttr(s.steep)}" oninput="updateModalSession(${i}, 'steep', this.value)" placeholder="e.g. 20s" />
+            </div>
+            <div class="form-group full">
+              <label>Notes</label>
+              <textarea oninput="updateModalSession(${i}, 'notes', this.value)" placeholder="Aroma, taste, finish...">${escHtml(s.notes)}</textarea>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function escAttr(s) {
+    return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
   }
 
   function closeModal() {
@@ -474,17 +1147,21 @@
       vendor: document.getElementById('fVendor').value.trim(),
       season: document.getElementById('fSeason').value.trim(),
       rating: currentRating,
-      temp: document.getElementById('fTemp').value,
-      grams: document.getElementById('fGrams').value,
-      ml: document.getElementById('fMl').value,
-      steep: document.getElementById('fSteep').value,
-      notes: document.getElementById('fNotes').value.trim(),
       buyAgain: document.getElementById('fBuyAgain').value,
       purchaseLink: document.getElementById('fLink').value.trim(),
+      sessions: modalSessions.map(s => ({
+        id: s.id,
+        date: s.date,
+        temp: s.temp,
+        grams: s.grams,
+        ml: s.ml,
+        steep: s.steep,
+        notes: (s.notes || '').trim(),
+      })),
     };
 
     if (editingId) {
-      const res = await fetch(`/api/teas/${editingId}`, {
+      const res = await api(`/api/teas/${editingId}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -493,7 +1170,7 @@
       const idx = teas.findIndex(t => t.id === editingId);
       if (idx !== -1) teas[idx] = updated;
     } else {
-      const res = await fetch('/api/teas', {
+      const res = await api('/api/teas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -508,7 +1185,7 @@
 
   async function deleteTea(id) {
     if (!confirm('Remove this tea entry?')) return;
-    await fetch(`/api/teas/${id}`, { method: 'DELETE' });
+    await api(`/api/teas/${id}`, { method: 'DELETE' });
     teas = teas.filter(t => t.id !== id);
     render();
   }
@@ -574,12 +1251,25 @@
     }
 
     grid.innerHTML = filtered.map(t => {
-      const hasBrew = t.temp || t.grams || t.steep;
+      const sessions = t.sessions || [];
+      const latest = sessions[sessions.length - 1] || null;
+      const hasBrew = latest && (latest.temp || latest.grams || latest.steep || latest.ml);
       const brewHTML = hasBrew ? `
         <div class="brew-params">
-          <div class="brew-param"><div class="val">${t.temp ? t.temp + '°C' : '—'}</div><div class="key">temp</div></div>
-          <div class="brew-param"><div class="val">${t.grams && t.ml ? t.grams + ' / ' + t.ml + 'ml' : t.grams ? t.grams : t.ml ? t.ml + 'ml' : '—'}</div><div class="key">ratio</div></div>
-          <div class="brew-param"><div class="val">${t.steep ? (/^\d+$/.test(t.steep) ? t.steep + 's' : t.steep) : '—'}</div><div class="key">1st steep</div></div>
+          <div class="brew-param"><div class="val">${latest.temp ? latest.temp + '°C' : '—'}</div><div class="key">temp</div></div>
+          <div class="brew-param"><div class="val">${latest.grams && latest.ml ? latest.grams + ' / ' + latest.ml + 'ml' : latest.grams ? latest.grams : latest.ml ? latest.ml + 'ml' : '—'}</div><div class="key">ratio</div></div>
+          <div class="brew-param"><div class="val">${latest.steep ? (/^\d+$/.test(latest.steep) ? latest.steep + 's' : latest.steep) : '—'}</div><div class="key">1st steep</div></div>
+        </div>` : '';
+
+      const latestNotes = latest && latest.notes ? `<div class="tea-notes">${escHtml(latest.notes)}</div>` : '';
+
+      const isOpen = expandedSessions.has(t.id);
+      const sessionsListHTML = sessions.length > 1 ? `
+        <button class="session-toggle" onclick="toggleSessions('${t.id}')">
+          ${sessions.length} brews ${isOpen ? '▴' : '▾'}
+        </button>
+        <div class="all-sessions ${isOpen ? '' : 'hidden'}" id="all-sessions-${t.id}">
+          ${sessions.map((s, i) => sessionRowHTML(s, i + 1)).join('')}
         </div>` : '';
 
       const date = new Date(t.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
@@ -600,16 +1290,49 @@
             <span style="margin-left:auto;color:var(--muted)">${date}</span>
           </div>
           ${brewHTML}
-          ${t.notes ? `<div class="tea-notes">${escHtml(t.notes)}</div>` : ''}
+          ${latestNotes}
+          ${sessionsListHTML}
           ${t.buyAgain ? `<div style="font-size:0.8rem">${buyAgainLabel(t.buyAgain)}</div>` : ''}
           <div class="card-actions">
             <button class="btn btn-sm" style="background:var(--accent-light);color:var(--accent)" onclick="openModal('${t.id}')">Edit</button>
+            <button class="btn btn-sm" style="background:var(--accent);color:#fff" onclick="quickAddSession('${t.id}')">+ Brew</button>
             <button class="btn btn-sm btn-danger" onclick="deleteTea('${t.id}')">Remove</button>
             ${t.purchaseLink ? `<a href="${escHtml(t.purchaseLink)}" target="_blank" rel="noopener noreferrer" class="btn btn-sm" style="background:#dbeafe;color:#1d4ed8;text-decoration:none">Buy</a>` : ''}
           </div>
         </div>
       `;
     }).join('');
+  }
+
+  function sessionRowHTML(s, num) {
+    const date = s.date ? new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+    const ratio = s.grams && s.ml ? `${s.grams}g / ${s.ml}ml` : s.grams ? `${s.grams}g` : s.ml ? `${s.ml}ml` : '';
+    const steep = s.steep ? (/^\d+$/.test(s.steep) ? s.steep + 's' : s.steep) : '';
+    const params = [
+      s.temp ? `${s.temp}°C` : '',
+      ratio,
+      steep,
+    ].filter(Boolean).join(' · ');
+    return `
+      <div class="session-row">
+        <div class="meta"><span>#${num}${date ? ' — ' + date : ''}</span></div>
+        <div class="params">${escHtml(params || '—')}</div>
+        ${s.notes ? `<div class="session-notes">${escHtml(s.notes)}</div>` : ''}
+      </div>`;
+  }
+
+  function toggleSessions(id) {
+    if (expandedSessions.has(id)) expandedSessions.delete(id);
+    else expandedSessions.add(id);
+    render();
+  }
+
+  function quickAddSession(id) {
+    openModal(id, null, { addBlankSession: true });
+    setTimeout(() => {
+      const list = document.getElementById('sessionsList');
+      if (list) list.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, 50);
   }
 
   function escHtml(s) {
@@ -625,7 +1348,183 @@
     if (e.key === 'Escape') closeModal();
   });
 
-  loadFromServer();
+  // ─── Brew Helper ───
+  let helperMethod = 'gaiwan';
+  let helperImageBase64 = null;
+  let helperImageType = null;
+  let lastBrewResult = null;
+
+  document.querySelectorAll('.method-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      helperMethod = btn.dataset.method;
+    });
+  });
+
+  document.getElementById('helperImage').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    helperImageType = file.type;
+    const reader = new FileReader();
+    reader.onload = () => {
+      helperImageBase64 = reader.result.split(',')[1];
+      document.querySelector('label[for="helperImage"]').classList.add('has-image');
+      document.getElementById('imagePreview').innerHTML = `
+        <div class="image-preview-wrap">
+          <img src="${reader.result}" alt="preview" />
+          <button type="button" class="clear-image" title="Remove image">&times;</button>
+        </div>`;
+      document.querySelector('.clear-image').addEventListener('click', clearHelperImage);
+    };
+    reader.readAsDataURL(file);
+  });
+
+  function clearHelperImage() {
+    helperImageBase64 = null;
+    helperImageType = null;
+    document.getElementById('helperImage').value = '';
+    document.querySelector('label[for="helperImage"]').classList.remove('has-image');
+    document.getElementById('imagePreview').innerHTML = '';
+  }
+
+  document.getElementById('brewBtn').addEventListener('click', async () => {
+    const text = document.getElementById('helperTea').value.trim();
+    const vessel = document.getElementById('helperVessel').value.trim();
+    const isUrl = /^https?:\/\//i.test(text);
+
+    const body = { method: helperMethod };
+    if (text) {
+      if (isUrl) body.url = text;
+      else body.teaName = text;
+    }
+    if (helperImageBase64) {
+      body.image = helperImageBase64;
+      body.imageMediaType = helperImageType;
+    }
+    if (vessel) body.vesselSize = vessel;
+
+    if (!text && !helperImageBase64) {
+      showHelperError('Enter a tea name, paste a link, or upload a photo.');
+      return;
+    }
+
+    const btn = document.getElementById('brewBtn');
+    const out = document.getElementById('brewResult');
+    btn.disabled = true;
+    btn.textContent = 'Steeping wisdom…';
+    out.classList.remove('hidden');
+    out.innerHTML = '<div class="helper-loading">Consulting the tea master…</div>';
+
+    try {
+      const res = await api('/api/brew', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+        signal: AbortSignal.timeout(60000),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `Request failed (${res.status})`);
+      lastBrewResult = data;
+      renderBrewResult(data);
+    } catch (err) {
+      const msg = err.name === 'TimeoutError' || err.name === 'AbortError'
+        ? 'Tea master is taking too long to respond — try again.'
+        : (err.message || 'Something went wrong.');
+      showHelperError(msg);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Get Brewing Instructions';
+    }
+  });
+
+  function showHelperError(msg) {
+    const out = document.getElementById('brewResult');
+    out.classList.remove('hidden');
+    out.innerHTML = `<div class="helper-error">${escHtml(msg)}</div>`;
+  }
+
+  function renderBrewResult(d) {
+    const steeps = (d.steeps || []).map(s => `
+      <div class="steep-row">
+        <div class="steep-num-circle">${s.number}</div>
+        <div class="steep-dur">${escHtml(s.duration)}</div>
+        <div class="steep-desc">${escHtml(s.notes)}</div>
+      </div>`).join('');
+
+    const flavors = (d.expectedFlavors || []).map(f => `<span class="chip">${escHtml(f)}</span>`).join('');
+
+    const originBadge = d.origin && d.origin.toLowerCase() !== 'unknown'
+      ? `<span class="brew-badge">${escHtml(d.origin)}</span>` : '';
+
+    document.getElementById('brewResult').innerHTML = `
+      <div class="brew-result">
+        <div class="brew-result-header">
+          <div>
+            <h3>${escHtml(d.teaName)}</h3>
+            <div class="brew-meta">
+              <span class="brew-badge">${escHtml(d.teaType)}</span>
+              ${originBadge}
+              <span class="brew-badge">${escHtml(d.method)}</span>
+            </div>
+          </div>
+        </div>
+        <div class="params-grid">
+          <div class="param-cell"><div class="k">Leaf</div><div class="v">${escHtml(d.leafAmount)}</div></div>
+          <div class="param-cell"><div class="k">Water</div><div class="v">${escHtml(d.waterTemp)}</div></div>
+          <div class="param-cell"><div class="k">Vessel</div><div class="v">${escHtml(d.vesselSize)}</div></div>
+          <div class="param-cell"><div class="k">Max Steeps</div><div class="v">${d.maxSteeps}</div></div>
+        </div>
+        <div class="brew-section"><h4>Ratio</h4><p>${escHtml(d.ratioInfo)}</p></div>
+        <div class="brew-section"><h4>Rinse</h4><p>${escHtml(d.rinseRecommendation)}</p></div>
+        <div class="brew-section"><h4>Steeps</h4><div class="steeps-list">${steeps}</div></div>
+        ${flavors ? `<div class="brew-section"><h4>Expected Flavors</h4><div class="flavor-chips">${flavors}</div></div>` : ''}
+        <div class="save-row">
+          <button class="btn btn-accent" onclick="saveBrewToJournal()">+ Save to Journal</button>
+        </div>
+      </div>`;
+  }
+
+  function mapTeaTypeToCategory(s) {
+    const t = (s || '').toLowerCase();
+    if (/(puerh|pu-?erh|sheng|shou|heicha|hei cha|liu bao|fu zhuan|liu ?an)/.test(t)) return 'dark';
+    if (/(oolong|wulong|yancha|wuyi|dancong|dan cong|tieguanyin|tgy|baozhong|dong ding|gaba|milk oolong)/.test(t)) return 'oolong';
+    if (/(silver needle|white peony|bai mu dan|shou mei|gong mei|baihao|white tea|^white)/.test(t)) return 'white';
+    if (/(green|sencha|gyokuro|matcha|longjing|long jing|biluochun|bi luo chun|huangshan|mao feng|lu cha|kabusecha|hojicha|genmaicha|kukicha)/.test(t)) return 'green';
+    if (/(yellow|huang|junshan)/.test(t)) return 'yellow';
+    if (/(black|red tea|hong cha|hongcha|dianhong|dian hong|jin jun mei|keemun|qimen|lapsang|zheng shan)/.test(t)) return 'black';
+    return 'other';
+  }
+
+  function parseFirstInt(s) {
+    if (!s) return null;
+    const m = String(s).match(/\d+/);
+    return m ? parseInt(m[0], 10) : null;
+  }
+
+  function saveBrewToJournal() {
+    if (!lastBrewResult) return;
+    const d = lastBrewResult;
+    const temp = parseFirstInt(d.waterTemp);
+    const ml = parseFirstInt(d.vesselSize);
+    const grams = d.leafAmount || '';
+    const steep = d.steeps && d.steeps[0] ? d.steeps[0].duration : '';
+    const origin = d.origin && d.origin.toLowerCase() !== 'unknown' ? d.origin : '';
+
+    openModal(null, {
+      name: d.teaName,
+      type: mapTeaTypeToCategory(d.teaType),
+      origin,
+      session: {
+        temp: temp != null ? temp : '',
+        grams,
+        ml: ml != null ? ml : '',
+        steep,
+      },
+    });
+  }
+
+  init();
 </script>
 </body>
 </html>

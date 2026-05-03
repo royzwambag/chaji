@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: chaji-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: chaji
+      POSTGRES_PASSWORD: chaji
+      POSTGRES_DB: chaji
+    ports:
+      - "5432:5432"
+    volumes:
+      - chaji-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chaji"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  chaji:
+    build: .
+    container_name: chaji
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "3333:3333"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://chaji:chaji@postgres:5432/chaji?sslmode=disable
+
+volumes:
+  chaji-db:
