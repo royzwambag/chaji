@@ -60,23 +60,6 @@
 
     main { max-width: 960px; margin: 0 auto; padding: 24px 16px; }
 
-    /* Stats bar */
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
-    }
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      text-align: center;
-    }
-    .stat-card .num { font-size: 1.8rem; font-weight: 700; color: var(--accent); }
-    .stat-card .label { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-
     /* Controls */
     .controls {
       display: flex;
@@ -239,28 +222,68 @@
     .type-other { background: #e8eaf0; color: #3a4070; }
 
     /* Brew Helper */
-    .helper {
+    .panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 20px;
       margin-bottom: 24px;
+      overflow: hidden;
     }
-    .helper-title {
+    .panel-tabs {
       display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      margin-bottom: 14px;
+      align-items: stretch;
+      border-bottom: 1px solid var(--border);
     }
-    .helper-title h2 {
-      font-size: 1.1rem;
-      color: var(--accent);
-      font-weight: 700;
-    }
-    .helper-title .sub {
-      font-size: 0.78rem;
+    .panel-tab {
+      flex: 0 0 auto;
+      background: none;
+      border: none;
+      padding: 12px 16px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
       color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -1px;
     }
+    .panel-tab:hover { color: var(--text); }
+    .panel-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+    .panel-toggle {
+      margin-left: auto;
+      background: none;
+      border: none;
+      padding: 0 14px;
+      cursor: pointer;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+    }
+    .panel-toggle:hover { color: var(--accent); }
+    .panel-toggle .chevron { transition: transform 0.2s; }
+    .panel.collapsed .panel-toggle .chevron { transform: rotate(-90deg); }
+    .panel.collapsed .panel-body { display: none; }
+    .panel-body { padding: 20px; }
+    .panel-sub { font-size: 0.78rem; color: var(--muted); margin-bottom: 10px; }
+    .defaults-controls {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .defaults-controls input {
+      width: 70px;
+      padding: 4px 8px;
+      font-size: 0.85rem;
+    }
+    .tab-pane { display: none; }
+    .tab-pane.active { display: block; }
+
     .helper-row {
       display: flex;
       gap: 8px;
@@ -321,6 +344,26 @@
     @media (min-width: 600px) {
       .helper-options { grid-template-columns: 1fr 1fr; }
     }
+
+    .defaults-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .defaults-row {
+      display: grid;
+      grid-template-columns: 1.4fr 0.6fr 0.8fr;
+      gap: 8px;
+      padding: 8px 10px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      align-items: center;
+    }
+    .defaults-row .d-name { font-weight: 600; color: var(--text); }
+    .defaults-row .d-ratio { color: var(--accent); font-weight: 600; text-align: center; }
+    .defaults-row .d-temp { color: var(--muted); text-align: right; }
     .method-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
     .method-btn {
       background: var(--bg);
@@ -698,38 +741,51 @@
 </section>
 
 <main class="hidden" id="appMain">
-  <section class="helper">
-    <div class="helper-title">
-      <h2>Brew Helper</h2>
-      <span class="sub">Ask the tea master</span>
-    </div>
-    <div class="helper-row">
-      <input type="text" id="helperTea" placeholder="Tea name or paste a link…" />
-      <label for="helperImage" class="photo-btn" title="Scan packaging photo" aria-label="Upload packaging photo">
-        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
-          <circle cx="12" cy="13" r="4"/>
+  <section class="panel" id="teaPanel">
+    <div class="panel-tabs">
+      <button type="button" class="panel-tab active" data-tab="defaults">My defaults</button>
+      <button type="button" class="panel-tab" data-tab="helper">Brew Helper</button>
+      <button type="button" class="panel-toggle" id="panelToggle" aria-label="Collapse" aria-expanded="true">
+        <svg class="chevron" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"/>
         </svg>
-      </label>
-      <input type="file" id="helperImage" accept="image/*" />
+      </button>
     </div>
-    <div id="imagePreview"></div>
-    <div class="helper-options">
-      <div class="method-buttons">
-        <button type="button" class="method-btn active" data-method="gaiwan">
-          <strong>Gaiwan / Teapot</strong><span>Gong Fu</span>
-        </button>
-        <button type="button" class="method-btn" data-method="western">
-          <strong>Western</strong><span>Mug / Pot</span>
-        </button>
+    <div class="panel-body">
+      <div class="tab-pane" data-pane="helper">
+        <div class="helper-row">
+          <input type="text" id="helperTea" placeholder="Tea name or paste a link…" />
+          <label for="helperImage" class="photo-btn" title="Scan packaging photo" aria-label="Upload packaging photo">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+              <circle cx="12" cy="13" r="4"/>
+            </svg>
+          </label>
+          <input type="file" id="helperImage" accept="image/*" />
+        </div>
+        <div id="imagePreview"></div>
+        <div class="helper-options">
+          <div class="method-buttons">
+            <button type="button" class="method-btn active" data-method="gaiwan">
+              <strong>Gaiwan / Teapot</strong><span>Gong Fu</span>
+            </button>
+            <button type="button" class="method-btn" data-method="western">
+              <strong>Western</strong><span>Mug / Pot</span>
+            </button>
+          </div>
+          <input type="text" id="helperVessel" placeholder="Vessel size (optional) — e.g. 100ml gaiwan" />
+        </div>
+        <button id="brewBtn" class="brew-btn">Get Brewing Instructions</button>
+        <div id="brewResult" class="hidden"></div>
       </div>
-      <input type="text" id="helperVessel" placeholder="Vessel size (optional) — e.g. 100ml gaiwan" />
+      <div class="tab-pane active" data-pane="defaults">
+        <div class="defaults-controls">
+          Vessel: <input type="number" id="defaultsVessel" value="110" min="20" max="500" step="10" /> ml
+        </div>
+        <div id="defaultsGrid" class="defaults-grid"></div>
+      </div>
     </div>
-    <button id="brewBtn" class="brew-btn">Get Brewing Instructions</button>
-    <div id="brewResult" class="hidden"></div>
   </section>
-
-  <div class="stats" id="stats"></div>
 
   <div class="controls">
     <input type="search" id="searchInput" placeholder="Search teas..." oninput="render()" />
@@ -1182,19 +1238,6 @@
     return filtered;
   }
 
-  function renderStats() {
-    const tried = teas.filter(t => t.buyAgain !== 'not-tried');
-    const total = tried.length;
-    const types = new Set(tried.map(t => t.type)).size;
-    const rated = tried.filter(t => t.rating);
-    const avg = rated.length ? (rated.reduce((s, t) => s + t.rating, 0) / rated.length).toFixed(1) : '—';
-    document.getElementById('stats').innerHTML = `
-      <div class="stat-card"><div class="num">${total}</div><div class="label">Teas tried</div></div>
-      <div class="stat-card"><div class="num">${types}</div><div class="label">Types explored</div></div>
-      <div class="stat-card"><div class="num">${avg}</div><div class="label">Avg rating</div></div>
-    `;
-  }
-
   function buyAgainLabel(v) {
     if (v === 'yes') return '<span style="color:var(--green);font-weight:600">✓ Buy again</span>';
     if (v === 'no') return '<span style="color:var(--red);font-weight:600">✗ Won\'t rebuy</span>';
@@ -1204,7 +1247,6 @@
   }
 
   function render() {
-    renderStats();
     const filtered = getFiltered();
     const grid = document.getElementById('teaGrid');
 
@@ -1317,12 +1359,68 @@
   let helperImageType = null;
   let lastBrewResult = null;
 
+  // Personal gongfu defaults (per ~110ml gaiwan). Ordered to match the add-tea form.
+  const GONGFU_DEFAULTS = [
+    { label: 'Green',       chinese: 'Lü Cha',        grams: 4,  ml: 110, temp: '80–85°C' },
+    { label: 'White — tender', chinese: 'Bái Chá',    grams: 5,  ml: 110, temp: '80–85°C' },
+    { label: 'White — aged',   chinese: 'Bái Chá',    grams: 7,  ml: 110, temp: '100°C' },
+    { label: 'Oolong',      chinese: 'Wūlóng',        grams: 7,  ml: 110, temp: '100°C' },
+    { label: 'Black',       chinese: 'Hóng Chá',      grams: 5,  ml: 110, temp: '90°C' },
+    { label: 'Raw Pu’er',   chinese: 'Shēng Pǔ’ěr',   grams: 8,  ml: 110, temp: '100°C' },
+    { label: 'Ripe Pu’er',  chinese: 'Shóu Pǔ’ěr',    grams: 10, ml: 110, temp: '100°C' },
+  ];
+
+  function renderDefaults() {
+    const grid = document.getElementById('defaultsGrid');
+    if (!grid) return;
+    const ml = parseInt(document.getElementById('defaultsVessel').value, 10) || 110;
+    grid.innerHTML = GONGFU_DEFAULTS.map(d => {
+      const g = +(d.grams * ml / d.ml).toFixed(1);
+      const gStr = Number.isInteger(g) ? g : g.toFixed(1);
+      return `
+        <div class="defaults-row">
+          <div class="d-name">${d.label} <span style="color:var(--muted);font-weight:400;">(${d.chinese})</span></div>
+          <div class="d-ratio">${gStr}g / ${ml}ml</div>
+          <div class="d-temp">${d.temp}</div>
+        </div>
+      `;
+    }).join('');
+  }
+  document.getElementById('defaultsVessel').addEventListener('input', renderDefaults);
+  renderDefaults();
+
   document.querySelectorAll('.method-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       helperMethod = btn.dataset.method;
     });
+  });
+
+  // Panel tabs + collapse
+  function setPanelCollapsed(collapsed) {
+    const panel = document.getElementById('teaPanel');
+    panel.classList.toggle('collapsed', collapsed);
+    document.getElementById('panelToggle').setAttribute('aria-expanded', String(!collapsed));
+  }
+  document.querySelectorAll('.panel-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      const target = tab.dataset.tab;
+      const panel = document.getElementById('teaPanel');
+      const isActive = tab.classList.contains('active');
+      const isCollapsed = panel.classList.contains('collapsed');
+      if (isActive) {
+        setPanelCollapsed(!isCollapsed);
+        return;
+      }
+      document.querySelectorAll('.panel-tab').forEach(t => t.classList.toggle('active', t === tab));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.dataset.pane === target));
+      if (isCollapsed) setPanelCollapsed(false);
+    });
+  });
+  document.getElementById('panelToggle').addEventListener('click', () => {
+    const panel = document.getElementById('teaPanel');
+    setPanelCollapsed(!panel.classList.contains('collapsed'));
   });
 
   document.getElementById('helperImage').addEventListener('change', e => {
@@ -1353,8 +1451,10 @@
 
   document.getElementById('brewBtn').addEventListener('click', async () => {
     const text = document.getElementById('helperTea').value.trim();
-    const vessel = document.getElementById('helperVessel').value.trim();
+    let vessel = document.getElementById('helperVessel').value.trim();
     const isUrl = /^https?:\/\//i.test(text);
+
+    if (!vessel && helperMethod === 'gaiwan') vessel = '110ml';
 
     const body = { method: helperMethod };
     if (text) {
