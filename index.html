@@ -630,6 +630,66 @@
       width: 100%;
       min-width: 0;
     }
+    .steeps-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .steep-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .steep-chip-label {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 6px 8px;
+      align-self: stretch;
+      display: flex;
+      align-items: center;
+    }
+    .steep-chip input {
+      width: 64px;
+      border: none;
+      background: transparent;
+      padding: 6px 4px;
+      font-size: 0.85rem;
+      text-align: center;
+      outline: none;
+    }
+    .steep-chip input::placeholder {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+    .steep-chip-remove {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0 6px;
+    }
+    .steep-chip-remove:hover { color: var(--red); }
+    .add-steep-btn {
+      background: var(--accent-light);
+      border: 1px dashed var(--accent);
+      color: var(--accent);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .add-steep-btn:hover { background: var(--accent); color: #fff; }
     .add-session-btn {
       width: 100%;
       background: var(--accent-light);
@@ -791,11 +851,11 @@
     <input type="search" id="searchInput" placeholder="Search teas..." oninput="render()" />
     <select id="filterType" onchange="render()">
       <option value="">All types</option>
-      <option value="green">Green</option>
-      <option value="white">White</option>
-      <option value="yellow">Yellow</option>
-      <option value="oolong">Oolong</option>
-      <option value="black">Black (Hong Cha)</option>
+      <option value="green">Green (Lü Cha)</option>
+      <option value="white">White (Bái Chá)</option>
+      <option value="yellow">Yellow (Huáng Chá)</option>
+      <option value="oolong">Oolong (Wūlóng)</option>
+      <option value="black">Black (Hóng Chá)</option>
       <option value="dark">Dark (Hēi Chá)</option>
       <option value="other">Other</option>
     </select>
@@ -1056,7 +1116,7 @@
         document.getElementById('fBuyAgain').value = tea.buyAgain || 'not-tried';
         document.getElementById('fLink').value = tea.purchaseLink || '';
         setRating(tea.rating || 0);
-        modalSessions = (tea.sessions || []).map(s => ({ ...s }));
+        modalSessions = (tea.sessions || []).map(s => makeSession(s));
       }
     } else if (prefill) {
       if (prefill.name) document.getElementById('fName').value = prefill.name;
@@ -1073,15 +1133,27 @@
   }
 
   function makeSession(prefill = {}) {
+    const steeps = Array.isArray(prefill.steeps)
+      ? prefill.steeps.slice()
+      : prefill.steep ? [prefill.steep] : [];
     return {
-      id: 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7),
+      id: prefill.id || ('s-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7)),
       date: prefill.date || new Date().toISOString(),
       temp: prefill.temp != null ? String(prefill.temp) : '',
       grams: prefill.grams || '',
       ml: prefill.ml != null ? String(prefill.ml) : '',
-      steep: prefill.steep || '',
+      steeps,
       notes: prefill.notes || '',
     };
+  }
+
+  function getSteeps(s) {
+    if (Array.isArray(s.steeps)) return s.steeps.filter(x => x != null && x !== '');
+    return s.steep ? [s.steep] : [];
+  }
+
+  function formatSteep(d) {
+    return /^\d+$/.test(d) ? d + 's' : d;
   }
 
   function addModalSession(prefill = {}) {
@@ -1099,6 +1171,29 @@
 
   function updateModalSession(idx, field, value) {
     if (modalSessions[idx]) modalSessions[idx][field] = value;
+  }
+
+  function updateModalSteep(sIdx, stIdx, value) {
+    const s = modalSessions[sIdx];
+    if (s && Array.isArray(s.steeps) && stIdx < s.steeps.length) s.steeps[stIdx] = value;
+  }
+
+  function addModalSteep(sIdx) {
+    const s = modalSessions[sIdx];
+    if (!s) return;
+    if (!Array.isArray(s.steeps)) s.steeps = [];
+    s.steeps.push('');
+    renderModalSessions();
+    const inputs = document.querySelectorAll(`#sessionsList .session-edit:nth-of-type(${sIdx + 1}) .steep-chip input`);
+    if (inputs.length) inputs[inputs.length - 1].focus();
+  }
+
+  function removeModalSteep(sIdx, stIdx) {
+    const s = modalSessions[sIdx];
+    if (s && Array.isArray(s.steeps)) {
+      s.steeps.splice(stIdx, 1);
+      renderModalSessions();
+    }
   }
 
   function renderModalSessions() {
@@ -1129,9 +1224,18 @@
               <label>Water (ml)</label>
               <input type="number" value="${escAttr(s.ml)}" oninput="updateModalSession(${i}, 'ml', this.value)" />
             </div>
-            <div class="form-group">
-              <label>1st Steep</label>
-              <input type="text" value="${escAttr(s.steep)}" oninput="updateModalSession(${i}, 'steep', this.value)" placeholder="e.g. 20s" />
+            <div class="form-group full">
+              <label>Steeps</label>
+              <div class="steeps-row">
+                ${(s.steeps || []).map((dur, j) => `
+                  <div class="steep-chip">
+                    <span class="steep-chip-label">${j + 1}</span>
+                    <input type="text" value="${escAttr(dur)}" placeholder="20s" oninput="updateModalSteep(${i}, ${j}, this.value)" />
+                    <button type="button" class="steep-chip-remove" onclick="removeModalSteep(${i}, ${j})" title="Remove steep">&times;</button>
+                  </div>
+                `).join('')}
+                <button type="button" class="add-steep-btn" onclick="addModalSteep(${i})">+ steep</button>
+              </div>
             </div>
             <div class="form-group full">
               <label>Notes</label>
@@ -1174,7 +1278,7 @@
         temp: s.temp,
         grams: s.grams,
         ml: s.ml,
-        steep: s.steep,
+        steeps: (s.steeps || []).map(x => (x || '').trim()).filter(Boolean),
         notes: (s.notes || '').trim(),
       })),
     };
@@ -1258,12 +1362,17 @@
     grid.innerHTML = filtered.map(t => {
       const sessions = t.sessions || [];
       const latest = sessions[sessions.length - 1] || null;
-      const hasBrew = latest && (latest.temp || latest.grams || latest.steep || latest.ml);
+      const latestSteeps = latest ? getSteeps(latest) : [];
+      const hasBrew = latest && (latest.temp || latest.grams || latestSteeps.length || latest.ml);
+      const steepVal = latestSteeps.length === 0 ? '—'
+        : latestSteeps.length === 1 ? formatSteep(latestSteeps[0])
+        : `${formatSteep(latestSteeps[0])} +${latestSteeps.length - 1}`;
+      const steepKey = latestSteeps.length > 1 ? `steeps (${latestSteeps.length})` : '1st steep';
       const brewHTML = hasBrew ? `
         <div class="brew-params">
           <div class="brew-param"><div class="val">${latest.temp ? latest.temp + '°C' : '—'}</div><div class="key">temp</div></div>
           <div class="brew-param"><div class="val">${latest.grams && latest.ml ? latest.grams + ' / ' + latest.ml + 'ml' : latest.grams ? latest.grams : latest.ml ? latest.ml + 'ml' : '—'}</div><div class="key">ratio</div></div>
-          <div class="brew-param"><div class="val">${latest.steep ? (/^\d+$/.test(latest.steep) ? latest.steep + 's' : latest.steep) : '—'}</div><div class="key">1st steep</div></div>
+          <div class="brew-param"><div class="val">${steepVal}</div><div class="key">${steepKey}</div></div>
         </div>` : '';
 
       const latestNotes = latest && latest.notes ? `<div class="tea-notes">${escHtml(latest.notes)}</div>` : '';
@@ -1312,11 +1421,11 @@
   function sessionRowHTML(s, num) {
     const date = s.date ? new Date(s.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
     const ratio = s.grams && s.ml ? `${s.grams}g / ${s.ml}ml` : s.grams ? `${s.grams}g` : s.ml ? `${s.ml}ml` : '';
-    const steep = s.steep ? (/^\d+$/.test(s.steep) ? s.steep + 's' : s.steep) : '';
+    const steeps = getSteeps(s).map(formatSteep).join(' · ');
     const params = [
       s.temp ? `${s.temp}°C` : '',
       ratio,
-      steep,
+      steeps,
     ].filter(Boolean).join(' · ');
     return `
       <div class="session-row">
@@ -1572,7 +1681,7 @@
     const temp = parseFirstInt(d.waterTemp);
     const ml = parseFirstInt(d.vesselSize);
     const grams = d.leafAmount || '';
-    const steep = d.steeps && d.steeps[0] ? d.steeps[0].duration : '';
+    const steeps = (d.steeps || []).map(s => s.duration).filter(Boolean);
     const origin = d.origin && d.origin.toLowerCase() !== 'unknown' ? d.origin : '';
 
     openModal(null, {
@@ -1583,7 +1692,7 @@
         temp: temp != null ? temp : '',
         grams,
         ml: ml != null ? ml : '',
-        steep,
+        steeps,
       },
     });
   }
